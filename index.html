@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Hafalan & Tilawah</title>
+    <title>Murojaah Itqon Fastamsik</title>
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -81,7 +81,7 @@
                           <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                           <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
                         </svg>
-                        <h1 class="text-lg font-bold text-slate-800">Tahfidz Tracker</h1>
+                        <h1 class="text-lg font-bold text-slate-800">Murojaah Itqon Fastamsik</h1>
                         <span v-if="!isOnline" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Offline</span>
                         <span v-else-if="supabaseConnected" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Online</span>
                     </div>
@@ -413,7 +413,7 @@
         let supabase = null;
         
         // Initialize Supabase only if credentials are provided
-        if (SUPABASE_URL !== 'https://ajpzgfbouohodcqtxhoo.supabase.co' && SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqcHpnZmJvdW9ob2RjcXR4aG9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMTgzMzMsImV4cCI6MjA2OTg5NDMzM30.Om-i-MsYYB_rjMrnNsMvt3do8bHGBIRf2z7l6NLt8Vk') {
+        if (SUPABASE_URL !== 'https://your-project.supabase.co' && SUPABASE_ANON_KEY !== 'your-anon-key') {
             supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
 
