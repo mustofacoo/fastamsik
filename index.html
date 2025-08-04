@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Murojaah Itqon Fastamsik</title>
+    <title>Manajemen Hafalan & Tilawah</title>
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -72,6 +72,17 @@
             </div>
         </div>
 
+        <!-- Connection Status Debug Panel (Hidden in production) -->
+        <div v-if="showDebug" class="fixed top-16 right-4 bg-white p-4 rounded-lg shadow-lg border z-40 text-xs">
+            <h4 class="font-bold mb-2">Debug Info:</h4>
+            <p>Supabase URL: {{ SUPABASE_URL ? 'Set' : 'Not Set' }}</p>
+            <p>Supabase Key: {{ SUPABASE_ANON_KEY ? 'Set' : 'Not Set' }}</p>
+            <p>Connection: {{ supabaseConnected ? 'Connected' : 'Disconnected' }}</p>
+            <p>Error: {{ connectionError || 'None' }}</p>
+            <button @click="testConnection" class="mt-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">Test Connection</button>
+            <button @click="showDebug = false" class="mt-2 bg-gray-500 text-white px-2 py-1 rounded text-xs ml-2">Hide</button>
+        </div>
+
         <!-- Header -->
         <header class="bg-white shadow-sm sticky top-0 z-20">
             <div class="max-w-6xl mx-auto px-4 py-3">
@@ -81,9 +92,11 @@
                           <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                           <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
                         </svg>
-                        <h1 class="text-lg font-bold text-slate-800">Murojaah Itqon Fastamsik</h1>
+                        <h1 class="text-lg font-bold text-slate-800">Tahfidz Tracker</h1>
                         <span v-if="!isOnline" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Offline</span>
                         <span v-else-if="supabaseConnected" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Online</span>
+                        <span v-else class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">Local Only</span>
+                        <button @click="showDebug = !showDebug" class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full hover:bg-gray-200">Debug</button>
                     </div>
                     <nav class="flex space-x-1">
                         <button @click="activeView = 'dashboard'" :class="activeView === 'dashboard' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'" class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
@@ -216,7 +229,7 @@
             </div>
 
             <!-- Overview Dashboard -->
-            <div v-if="activeView === 'overview' && isAuthenticated">
+            <div v-if="activeView === 'overview'">
                 <h2 class="text-xl font-bold mb-4">Overview Progress Peserta</h2>
 
                 
@@ -294,11 +307,11 @@
                         <p class="text-slate-500 text-sm">Kelola data peserta hafalan.</p>
                     </div>
                     <div class="flex space-x-2">
-                        <button @click="syncData" class="bg-green-600 text-white font-medium py-2 px-3 rounded-md hover:bg-green-700 transition-colors shadow-sm flex items-center space-x-1 text-sm">
+                        <button @click="syncData" :disabled="!supabaseConnected" class="bg-green-600 text-white font-medium py-2 px-3 rounded-md hover:bg-green-700 transition-colors shadow-sm flex items-center space-x-1 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
-                            <span>Sync</span>
+                            <span>{{ supabaseConnected ? 'Sync' : 'No DB' }}</span>
                         </button>
                         <button @click="showAddModal" class="bg-blue-600 text-white font-medium py-2 px-3 rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center space-x-1 text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -411,11 +424,6 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqcHpnZmJvdW9ob2RjcXR4aG9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMTgzMzMsImV4cCI6MjA2OTg5NDMzM30.Om-i-MsYYB_rjMrnNsMvt3do8bHGBIRf2z7l6NLt8Vk';
         
         let supabase = null;
-        
-        // Initialize Supabase only if credentials are provided
-        if (SUPABASE_URL !== 'https://your-project.supabase.co' && SUPABASE_ANON_KEY !== 'your-anon-key') {
-            supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
 
         createApp({
             setup() {
@@ -430,6 +438,8 @@
                 const selectedYear = ref(new Date().getFullYear());
                 const isOnline = ref(navigator.onLine);
                 const supabaseConnected = ref(false);
+                const connectionError = ref('');
+                const showDebug = ref(false);
 
                 // Authentication
                 const isAuthenticated = ref(false);
@@ -522,24 +532,56 @@
 
                 // --- SUPABASE METHODS ---
                 const initSupabase = async () => {
-                    if (!supabase) {
+                    connectionError.value = '';
+                    
+                    // Check if URL and Key are configured
+                    if (!SUPABASE_URL || SUPABASE_URL === 'https://your-project.supabase.co' || 
+                        !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'your-anon-key') {
+                        connectionError.value = 'Supabase URL dan Key belum dikonfigurasi';
                         console.log('Supabase not configured, using localStorage only');
                         return false;
                     }
-                    
+
                     try {
-                        // Test connection
-                        const { data, error } = await supabase.from('participants').select('count', { count: 'exact', head: true });
-                        if (error && error.code !== 'PGRST116') { // PGRST116 = relation does not exist (expected for new setup)
+                        // Initialize Supabase client
+                        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                        
+                        // Test connection with timeout
+                        const timeoutPromise = new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Connection timeout')), 10000)
+                        );
+
+                        const testPromise = supabase.from('participants').select('count', { count: 'exact', head: true });
+                        
+                        const { data, error } = await Promise.race([testPromise, timeoutPromise]);
+                        
+                        if (error) {
+                            // Check if table doesn't exist (expected for new setup)
+                            if (error.code === 'PGRST116' || error.message?.includes('relation "participants" does not exist')) {
+                                connectionError.value = 'Tabel "participants" belum dibuat. Jalankan SQL schema terlebih dahulu.';
+                                console.warn('Participants table does not exist. Please run the SQL schema.');
+                                return false;
+                            }
                             throw error;
                         }
+                        
                         supabaseConnected.value = true;
+                        console.log('Supabase connected successfully');
                         return true;
+                        
                     } catch (error) {
+                        connectionError.value = `Koneksi gagal: ${error.message}`;
                         console.error('Supabase connection failed:', error);
                         supabaseConnected.value = false;
                         return false;
                     }
+                };
+
+                const testConnection = async () => {
+                    isLoading.value = true;
+                    loadingMessage.value = 'Testing connection...';
+                    await initSupabase();
+                    isLoading.value = false;
                 };
 
                 const loadFromSupabase = async () => {
@@ -564,11 +606,13 @@
                                 dailyTasks: p.daily_tasks || {},
                                 tasmikJuz: p.tasmik_juz || []
                             }));
+                            console.log(`Loaded ${data.length} participants from Supabase`);
                             return true;
                         }
                         return false;
                     } catch (error) {
                         console.error('Error loading from Supabase:', error);
+                        connectionError.value = `Gagal memuat data: ${error.message}`;
                         return false;
                     } finally {
                         isLoading.value = false;
@@ -593,9 +637,11 @@
                             .upsert(supabaseData, { onConflict: 'id' });
                         
                         if (error) throw error;
+                        console.log(`Saved participant ${participant.name} to Supabase`);
                         return true;
                     } catch (error) {
                         console.error('Error saving to Supabase:', error);
+                        connectionError.value = `Gagal menyimpan: ${error.message}`;
                         return false;
                     }
                 };
@@ -610,9 +656,11 @@
                             .eq('id', id);
                         
                         if (error) throw error;
+                        console.log(`Deleted participant ${id} from Supabase`);
                         return true;
                     } catch (error) {
                         console.error('Error deleting from Supabase:', error);
+                        connectionError.value = `Gagal menghapus: ${error.message}`;
                         return false;
                     }
                 };
@@ -627,12 +675,25 @@
                         isLoading.value = true;
                         loadingMessage.value = 'Sinkronisasi data...';
                         
+                        let successCount = 0;
+                        let errorCount = 0;
+                        
                         // Save all participants to Supabase
                         for (const participant of participants.value) {
-                            await saveToSupabase(participant);
+                            const success = await saveToSupabase(participant);
+                            if (success) {
+                                successCount++;
+                            } else {
+                                errorCount++;
+                            }
                         }
                         
-                        alert('Data berhasil disinkronisasi');
+                        if (errorCount === 0) {
+                            alert(`Semua data berhasil disinkronisasi (${successCount} peserta)`);
+                        } else {
+                            alert(`Sinkronisasi selesai: ${successCount} berhasil, ${errorCount} gagal`);
+                        }
+                        
                     } catch (error) {
                         console.error('Sync error:', error);
                         alert('Gagal sinkronisasi data');
@@ -682,11 +743,9 @@
                         localStorage.setItem('tahfidz_selected_year', selectedYear.value);
                         
                         // Auto-sync to Supabase when online
-                        if (isOnline.value && supabaseConnected.value) {
+                        if (isOnline.value && supabaseConnected.value && currentParticipant.value) {
                             // Debounced sync - only sync the modified participant
-                            if (currentParticipant.value) {
-                                await saveToSupabase(currentParticipant.value);
-                            }
+                            await saveToSupabase(currentParticipant.value);
                         }
                     } catch (e) {
                         console.error("Gagal menyimpan data:", e);
@@ -703,6 +762,7 @@
                             const data = localStorage.getItem('tahfidz_data');
                             if (data) {
                                 participants.value = JSON.parse(data);
+                                console.log(`Loaded ${participants.value.length} participants from localStorage`);
                             }
                         }
 
@@ -935,6 +995,10 @@
                 watch(selectedYear, saveData);
 
                 return {
+                    // Exposed constants for debug
+                    SUPABASE_URL,
+                    SUPABASE_ANON_KEY,
+                    // State
                     isReady,
                     isLoading,
                     loadingMessage,
@@ -945,6 +1009,8 @@
                     selectedYear,
                     isOnline,
                     supabaseConnected,
+                    connectionError,
+                    showDebug,
                     isAuthenticated,
                     showLoginModal,
                     adminPassword,
@@ -953,6 +1019,7 @@
                     newTasmikJuz,
                     showAdminModal,
                     adminForm,
+                    // Computed
                     currentParticipant,
                     availableMonths,
                     selectedMonthName,
@@ -963,6 +1030,8 @@
                     totalHalamanSemua,
                     totalTasmikSemua,
                     rataRataTilawah,
+                    // Methods
+                    testConnection,
                     showAdminLogin,
                     adminLogin,
                     logout,
