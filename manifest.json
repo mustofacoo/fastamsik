@@ -1,7 +1,7 @@
 {
-  "name": "Tahfidz Tracker - Manajemen Hafalan & Tilawah",
-  "short_name": "Tahfidz Tracker",
-  "description": "Aplikasi untuk melacak progress hafalan Al-Quran dan tilawah harian",
+  "name": "Tahfizh Itqon Fastamsik",
+  "short_name": "Fastamsik",
+  "description": "Rekap capaian di program Fastamsik",
   "version": "1.0.0",
   "start_url": "./",
   "display": "standalone",
