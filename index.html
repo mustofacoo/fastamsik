@@ -277,7 +277,7 @@ Jika tidak terjawab dengan baik, maka peserta hanya diperbolehkan setoran maksim
                 <!-- Participants Progress Table -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="px-4 py-3 border-b border-slate-200">
-                        <h3 class="font-semibold">Progress Detail Peserta (Diurutkan Berdasarkan Performa)</h3>
+                        <h3 class="font-semibold">Progress Detail Peserta</h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
@@ -288,7 +288,7 @@ Jika tidak terjawab dengan baik, maka peserta hanya diperbolehkan setoran maksim
                                     <th class="px-3 py-2 text-left font-medium text-slate-600">Tilawah</th>
                                     <th class="px-3 py-2 text-left font-medium text-slate-600">Hafalan</th>
                                     <th class="px-3 py-2 text-left font-medium text-slate-600">Tasmik</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Status</th>
+                                    <th class="px-3 py-2 text-left font-medium text-slate-600"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1000,10 +1000,10 @@ Jika tidak terjawab dengan baik, maka peserta hanya diperbolehkan setoran maksim
                 };
 
                 const getStatusText = (percentage) => {
-                    if (percentage >= 80) return 'Istiqomah';
-                    if (percentage >= 60) return 'Alhamdulillah';
-                    if (percentage >= 40) return 'Perlu Ditingkatkan';
-                    return 'Butuh Motivasi';
+                    if (percentage >= 80) return '';
+                    if (percentage >= 60) return '';
+                    if (percentage >= 40) return ' ';
+                    return '';
                 };
 
                 const getRankBadge = (index) => {
