@@ -3,46 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Murojaah Mutqin</title>
-    
-    <!-- Tailwind CSS for styling -->
+    <title>Tahfizh Tracker - Debug</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Vue.js 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Tahfizh Itqon Fastamsik">
-    <link rel="apple-touch-icon" href="icon-192.png">
-
-    <!-- Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 10px;
-        }
+        body { font-family: 'Inter', sans-serif; }
         .loading-spinner {
             border: 2px solid #f3f4f6;
             border-top: 2px solid #3b82f6;
@@ -57,192 +24,158 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800">
+<body class="bg-slate-100">
 
-    <div id="app" class="min-h-screen" :class="isReady ? 'opacity-100' : 'opacity-0'">
-        
-        <!-- Loading Overlay -->
-        <div v-if="isLoading" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-4 flex items-center space-x-3">
-                <div class="loading-spinner"></div>
-                <span class="text-slate-700 text-sm">{{ loadingMessage }}</span>
-            </div>
+<div id="app">
+    <!-- Loading State -->
+    <div v-if="!isReady" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <div class="loading-spinner mx-auto mb-3"></div>
+            <p class="text-slate-600">Memuat aplikasi...</p>
         </div>
+    </div>
 
+    <!-- Error State -->
+    <div v-else-if="initError" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-red-50 border-2 border-red-200 p-6 rounded-lg max-w-md">
+            <h2 class="text-red-800 font-bold text-lg mb-2">⚠️ Error Memuat Aplikasi</h2>
+            <p class="text-red-700 mb-4">{{ initError }}</p>
+            <button @click="retryInit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                Coba Lagi
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div v-else class="min-h-screen">
         <!-- Header -->
         <header class="bg-white shadow-sm sticky top-0 z-20">
-            <div class="max-w-6xl mx-auto px-3 py-2">
+            <div class="max-w-6xl mx-auto px-4 py-3">
                 <div class="flex justify-between items-center">
+                    <h1 class="text-lg font-bold text-slate-800">Tahfizh Itqon Fastamsik</h1>
                     <div class="flex items-center space-x-2">
-                        <!-- Ganti ikon ini sesuai keinginan, bisa dari Heroicons, Font Awesome, atau SVG custom -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                          <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
-                        </svg>
-                        <h1 class="text-sm sm:text-lg font-bold text-slate-800">Tahfizh Itqon Fastamsik Ibnu Katsir</h1>
-                        <span v-if="!isOnline" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full hidden sm:inline">Offline</span>
-                        <span v-else-if="supabaseConnected" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full hidden sm:inline">Online</span>
-                        <span v-else class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full hidden sm:inline">Local</span>
+                        <span v-if="supabaseConnected" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                            ✓ Online
+                        </span>
+                        <span v-else class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
+                            Local Only
+                        </span>
                     </div>
-                    <nav class="flex space-x-1">
-                        <button @click="activeView = 'dashboard'" :class="activeView === 'dashboard' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'" class="px-2 py-1 rounded-md text-xs sm:text-sm font-medium">
-                            Dashboard
-                        </button>
-                        <button @click="activeView = 'overview'" :class="activeView === 'overview' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'" class="px-2 py-1 rounded-md text-xs sm:text-sm font-medium">
-                            Laporan
-                        </button>
-                        <button @click="showAdminLogin" :class="activeView === 'admin' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'" class="px-2 py-1 rounded-md text-xs sm:text-sm font-medium">
-                            Admin
-                        </button>
-                    </nav>
                 </div>
+                <nav class="flex space-x-2 mt-2">
+                    <button @click="activeView = 'dashboard'" 
+                            :class="activeView === 'dashboard' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'"
+                            class="px-3 py-1.5 rounded text-sm font-medium">
+                        Dashboard
+                    </button>
+                    <button @click="activeView = 'overview'" 
+                            :class="activeView === 'overview' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'"
+                            class="px-3 py-1.5 rounded text-sm font-medium">
+                        Laporan
+                    </button>
+                    <button @click="handleAdminClick" 
+                            :class="activeView === 'admin' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'"
+                            class="px-3 py-1.5 rounded text-sm font-medium">
+                        Admin
+                    </button>
+                </nav>
             </div>
         </header>
 
-        <main class="max-w-6xl mx-auto px-3 py-3">
-            <!-- Participant Selector & Month Filter (Dashboard) -->
-            <div v-if="activeView === 'dashboard'" class="mb-4">
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <div class="flex-1">
-                         <label class="block text-sm font-medium text-slate-600 mb-1">Pilih Peserta:</label>
-                         <select v-model="currentParticipantId" class="w-full bg-white border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                             <option value="">-- Pilih Peserta --</option>
-                             <option v-for="p in participants" :key="p.id" :value="p.id">{{ p.name }}</option>
-                         </select>
-                    </div>
-                    <div class="sm:w-48">
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Filter Bulan:</label>
-                        <select v-model="selectedMonth" class="w-full bg-white border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option v-for="month in availableMonths" :key="month.value" :value="month.value">{{ month.label }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
+        <main class="max-w-6xl mx-auto px-4 py-4">
             <!-- Dashboard View -->
-            <div v-if="activeView === 'dashboard' && currentParticipant">
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                    <div class="bg-white p-3 rounded-lg shadow-sm flex items-center space-x-3">
-                        <div class="bg-blue-100 p-2 rounded-full">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-9-5.747h18" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-500">Ziyadah {{ selectedMonthName }}</p>
-                            <p class="text-lg font-bold">{{ ziyadahTotal }} Halaman</p>
-                        </div>
-                    </div>
-                    <div class="bg-white p-3 rounded-lg shadow-sm flex items-center space-x-3">
-                        <div class="bg-green-100 p-2 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-500">Tugas Harian</p>
-                            <p class="text-lg font-bold">{{ dailyTaskPercentage }}%</p>
-                        </div>
-                    </div>
-                    <div class="bg-white p-3 rounded-lg shadow-sm flex items-center space-x-3">
-                        <div class="bg-purple-100 p-2 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-500">Juz Tasmik</p>
-                            <p class="text-lg font-bold">{{ currentParticipant.tasmikJuz.length }} Juz</p>
-                        </div>
-                    </div>
+            <div v-if="activeView === 'dashboard'">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Pilih Peserta:</label>
+                    <select v-model="currentParticipantId" class="w-full bg-white border rounded-lg p-2">
+                        <option value="">-- Pilih Peserta --</option>
+                        <option v-for="p in participants" :key="p.id" :value="p.id">{{ p.name }}</option>
+                    </select>
                 </div>
 
-                <!-- Main Content Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                    <!-- Left Column: Tilawah Calendar -->
-                    <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow-sm">
-                        <h3 class="font-semibold text-base mb-3">Checklist Tilawah ({{ selectedMonthName }})</h3>
-                        <div class="grid grid-cols-7 gap-1">
-                            <div v-for="day in daysInSelectedMonth" :key="day" 
-                                 class="border rounded-md p-1 text-center cursor-pointer text-xs transition-colors"
-                                 :class="{
-                                     'bg-green-100 border-green-300 text-green-800': getTaskStatus(day),
-                                     'bg-slate-50 hover:bg-slate-100': !getTaskStatus(day)
-                                 }"
-                                 @click="toggleDailyTask(day)">
-                                <span class="font-semibold block">{{ day }}</span>
-                                <span class="text-xs text-slate-500">{{ getDayName(day) }}</span>
-                            </div>
+                <div v-if="!currentParticipant && participants.length === 0" class="text-center py-12">
+                    <p class="text-slate-600 mb-4">Belum ada peserta. Silakan login sebagai admin untuk menambahkan peserta.</p>
+                    <button @click="showLoginModal = true" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Login Admin
+                    </button>
+                </div>
+
+                <div v-else-if="!currentParticipant" class="text-center py-12">
+                    <p class="text-slate-600">Silakan pilih peserta untuk memulai</p>
+                </div>
+
+                <div v-else>
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <p class="text-xs text-slate-500">Ziyadah Bulan Ini</p>
+                            <p class="text-2xl font-bold">{{ ziyadahTotal }}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <p class="text-xs text-slate-500">Tilawah Harian</p>
+                            <p class="text-2xl font-bold">{{ dailyTaskPercentage }}%</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <p class="text-xs text-slate-500">Juz Tasmik</p>
+                            <p class="text-2xl font-bold">{{ currentParticipant.tasmikJuz.length }}</p>
                         </div>
                     </div>
 
-                    <!-- Right Column: Inputs -->
-                    <div class="lg:col-span-2 space-y-4">
-                        <!-- Ziyadah Input -->
-                        <div class="bg-white p-4 rounded-lg shadow-sm">
-                            <h3 class="font-semibold text-base mb-3">Input Ziyadah</h3>
-                            <form @submit.prevent="addZiyadah" class="space-y-3">
-                                <div class="flex items-center space-x-2">
-                                    <input type="number" v-model.number="newZiyadahFrom" placeholder="Dari" class="w-full border border-slate-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                    <span class="text-slate-400">-</span>
-                                    <input type="number" v-model.number="newZiyadahTo" placeholder="Sampai" class="w-full border border-slate-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                </div>
-                                <button type="submit" class="w-full bg-blue-600 text-white font-medium py-2 px-3 rounded-md hover:bg-blue-700 text-sm shadow-sm">
-                                    Simpan Hafalan
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Tasmik Input -->
-                        <div class="bg-white p-4 rounded-lg shadow-sm">
-                            <h3 class="font-semibold text-base mb-3">Input Tasmik</h3>
-                             <form @submit.prevent="addTasmik" class="space-y-3">
-                                <input type="number" v-model.number="newTasmikJuz" placeholder="Juz ke-" min="1" max="30" class="w-full border border-slate-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                <button type="submit" class="w-full bg-purple-600 text-white font-medium py-2 px-3 rounded-md hover:bg-purple-700 text-sm shadow-sm">
-                                    Simpan Tasmik
-                                </button>
-                            </form>
-                            <div v-if="currentParticipant.tasmikJuz.length > 0" class="mt-3">
-                                <h4 class="font-medium text-sm mb-2">Juz Tasmik:</h4>
-                                <div class="flex flex-wrap gap-1">
-                                    <span v-for="juz in sortedTasmikJuz" :key="juz" class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">{{ juz }}</span>
+                    <!-- Main Content Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                        <!-- Tilawah Calendar (Left - 3 columns) -->
+                        <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow-sm">
+                            <h3 class="font-semibold mb-3">Checklist Tilawah Harian - {{ selectedMonthName }} {{ selectedYear }}</h3>
+                            <div class="grid grid-cols-7 gap-1">
+                                <div v-for="day in daysInSelectedMonth" :key="day" 
+                                     class="border rounded-md p-2 text-center cursor-pointer text-xs transition-colors"
+                                     :class="{
+                                         'bg-green-100 border-green-300 text-green-800': getTaskStatus(day),
+                                         'bg-slate-50 hover:bg-slate-100 border-slate-200': !getTaskStatus(day)
+                                     }"
+                                     @click="toggleDailyTask(day)">
+                                    <div class="font-semibold text-base">{{ day }}</div>
+                                    <div class="text-xs text-slate-500">{{ getDayName(day) }}</div>
                                 </div>
                             </div>
+                            <p class="text-xs text-slate-500 mt-3">💡 Klik tanggal setelah mengerjakan tugas harian</p>
                         </div>
 
-                        <!-- Info Panel with Toggle - Moved to bottom of inputs -->
-                        <div class="mt-4">
-                            <button @click="showInfo = !showInfo" class="flex items-center space-x-2 text-blue-600 hover:text-blue-800 text-sm font-medium mb-2 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform duration-200" :class="showInfo ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                                <span>{{ showInfo ? 'Sembunyikan' : 'Tampilkan' }} Informasi</span>
-                            </button>
-                            
-                            <div v-show="showInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 transition-all duration-300">
-                                <h3 class="font-semibold mb-2">Ketentuan Tahfizh Itqon</h3>
-                                <div class="space-y-3">
-                                    <div>
-                                        <h4 class="font-medium text-blue-900 mb-1"> <li>Setoran maksimal 5 halaman, minimal 1 halaman. Pertemuan maksimal 20 menit per-peserta</li>  <br><br>
+                        <!-- Input Forms (Right - 2 columns) -->
+                        <div class="lg:col-span-2 space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h3 class="font-semibold mb-3">Input Ziyadah</h3>
+                                <form @submit.prevent="addZiyadah">
+                                    <div class="flex gap-2 mb-3">
+                                        <input type="number" v-model.number="newZiyadahFrom" placeholder="Dari" 
+                                               class="w-full border rounded p-2" required>
+                                        <span class="self-center">-</span>
+                                        <input type="number" v-model.number="newZiyadahTo" placeholder="Sampai" 
+                                               class="w-full border rounded p-2" required>
+                                    </div>
+                                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                                        Simpan Hafalan
+                                    </button>
+                                </form>
+                            </div>
 
-
-                                            <li>Setelah setoran usai, peserta diberi 2 soal sambung ayat maksimal 7-10 baris. <br> <br>
-Jika terjawab dengan baik maka peserta boleh untuk setoran 5 halaman pada pertemuan berikutnya. <br> <br>
-Jika tidak terjawab dengan baik, maka peserta hanya diperbolehkan setoran maksimal 2 halaman pada pertemuan berikutnya dan melancarkan hafalan sebelumnya</li></h4>
-                                        <p class="text-xs">-</p>
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h3 class="font-semibold mb-3">Input Tasmik</h3>
+                                <form @submit.prevent="addTasmik">
+                                    <input type="number" v-model.number="newTasmikJuz" placeholder="Juz ke-" 
+                                           min="1" max="30" class="w-full border rounded p-2 mb-3" required>
+                                    <button type="submit" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700">
+                                        Simpan Tasmik
+                                    </button>
+                                </form>
+                                <div v-if="currentParticipant.tasmikJuz.length > 0" class="mt-3">
+                                    <p class="text-sm font-medium mb-2">Juz yang sudah ditasmik:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span v-for="juz in sortedTasmikJuz" :key="juz" 
+                                              class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">
+                                            Juz {{ juz }}
+                                        </span>
                                     </div>
-                                    <div>
-                                        <h3 class="font-semibold mb-2">Input Tasmik:</h3>
-                                        <p class="font-medium text-blue-900 mb-1">Setelah peserta selesai 1 juz, diharap untuk tasmi' kepada partner, lalu menuliskan input tasmi' di rekap web ini</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-semibold mb-2">1 Jam Bersama Al-Qur'an</h3>
-                                        <p class="font-medium text-blue-900 mb-1">Setiap peserta dengan capaian dibawah 70%, wajib untuk memberikan punishment kepada diri sendiri</p>
-                                    </div>
-                                </div>
-                                <div class="mt-3 p-2 bg-blue-100 rounded border-l-4 border-blue-400">
-                                    <p class="text-xs"><strong>💡 NB:</strong> btw, jangan sampai salah input ke data peserta yang lain ya. Kalau bisa ndak usah lihat-lihat punya orang lain. Fokus pada diri sendiri :D</p>
                                 </div>
                             </div>
                         </div>
@@ -250,143 +183,94 @@ Jika tidak terjawab dengan baik, maka peserta hanya diperbolehkan setoran maksim
                 </div>
             </div>
 
-            <!-- Overview Dashboard -->
-            <div v-if="activeView === 'overview' && isAuthenticated" class="space-y-4">
-                <h2 class="text-xl font-bold mb-4">Laporan Progress Peserta</h2>
-
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                    <div class="bg-white p-3 rounded-lg shadow-sm text-center">
-                        <div class="text-xl font-bold text-blue-600">{{ participants.length }}</div>
-                        <div class="text-xs text-slate-500">Total Peserta</div>
-                    </div>
-                    <div class="bg-white p-3 rounded-lg shadow-sm text-center">
-                        <div class="text-xl font-bold text-green-600">{{ totalHalamanSemua }}</div>
-                        <div class="text-xs text-slate-500">Total Halaman yang Disetorkan</div>
-                    </div>
-                    <div class="bg-white p-3 rounded-lg shadow-sm text-center">
-                        <div class="text-xl font-bold text-purple-600">{{ totalTasmikSemua }}</div>
-                        <div class="text-xs text-slate-500">Total Juz Ditasmikkan</div>
-                    </div>
-                    <div class="bg-white p-3 rounded-lg shadow-sm text-center">
-                        <div class="text-xl font-bold text-orange-600">{{ Math.round(rataRataTilawah) }}%</div>
-                        <div class="text-xs text-slate-500">Rata-rata Tilawah</div>
-                    </div>
+            <!-- Overview View -->
+            <div v-if="activeView === 'overview'">
+                <div v-if="!isAuthenticated" class="text-center py-12">
+                    <p class="text-slate-600 mb-4">Silakan login sebagai admin untuk melihat laporan</p>
+                    <button @click="showLoginModal = true" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Login Admin
+                    </button>
                 </div>
 
-                <!-- Participants Progress Table -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="px-4 py-3 border-b border-slate-200">
-                        <h3 class="font-semibold">Progress Detail Peserta</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
+                <div v-else>
+                    <h2 class="text-xl font-bold mb-4">Laporan Progress Peserta</h2>
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                        <table class="w-full">
                             <thead class="bg-slate-50">
                                 <tr>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Nomor</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Nama</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Tilawah</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Hafalan</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Tasmik</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-if="sortedParticipants.length === 0">
-                                    <td colspan="6" class="px-4 py-8 text-center text-slate-500">Belum ada data peserta.</td>
-                                </tr>
-                                <tr v-for="(p, index) in sortedParticipants" :key="p.id" class="border-b border-slate-100 hover:bg-slate-50">
-                                    <td class="px-3 py-2 font-bold text-center">
-                                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                                             :class="getRankBadge(index)">
-                                            {{ index + 1 }}
-                                        </div>
-                                    </td>
-                                    <td class="px-3 py-2 font-medium">{{ p.name }}</td>
+                                    <th class="px-4 py-3 text-left">Nama</th>
+                                    <th class="px-4 py-3 text-left">Tugas</th>
+                                    <th class="px-4 py-3 text-left">Total Hafalan</th>
                                     
-                                    <td class="px-3 py-2">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-12 bg-slate-200 rounded-full h-2">
-                                                <div class="h-2 rounded-full" 
-                                                     :class="getProgressColor(calculateTaskPercentage(p))"
-                                                     :style="`width: ${calculateTaskPercentage(p)}%`"></div>
-                                            </div>
-                                            <span class="text-xs font-medium">{{ calculateTaskPercentage(p) }}%</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-3 py-2">{{ calculateTotalZiyadah(p) }} hal</td>
-                                    <td class="px-3 py-2">{{ p.tasmikJuz.length }} juz</td>
-                                    <td class="px-3 py-2">
-                                        <span :class="getStatusBadge(calculateTaskPercentage(p))" class="px-2 py-1 rounded-full text-xs font-medium">
-                                            {{ getStatusText(calculateTaskPercentage(p)) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Panel View -->
-            <div v-if="activeView === 'admin' && isAuthenticated">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-xl font-bold">Panel Admin</h2>
-                        <p class="text-slate-500 text-sm">Kelola data peserta hafalan.</p>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button @click="syncData" :disabled="!supabaseConnected" class="bg-green-600 text-white font-medium py-2 px-3 rounded-md hover:bg-green-700 shadow-sm flex items-center space-x-1 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            <span class="hidden sm:inline">{{ supabaseConnected ? 'Sync' : 'No DB' }}</span>
-                        </button>
-                        <button @click="showAddModal" class="bg-blue-600 text-white font-medium py-2 px-3 rounded-md hover:bg-blue-700 shadow-sm flex items-center space-x-1 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="hidden sm:inline">Tambah</span>
-                        </button>
-                        <button @click="logout" class="bg-red-600 text-white font-medium py-2 px-3 rounded-md hover:bg-red-700 text-sm">
-                            Logout
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50 border-b border-slate-200">
-                                <tr>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Nama Peserta</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Total Hafalan</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Progres Tugas</th>
-                                    <th class="px-3 py-2 text-left font-medium text-slate-600">Aksi</th>
+                                    <th class="px-4 py-3 text-left">Tasmik</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-if="participants.length === 0">
-                                    <td colspan="4" class="px-4 py-8 text-center text-slate-500">Belum ada data peserta.</td>
+                                    <td colspan="4" class="px-4 py-8 text-center text-slate-500">Belum ada data</td>
                                 </tr>
-                                <tr v-for="p in participants" :key="p.id" class="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                                    <td class="px-3 py-2 font-medium">{{ p.name }}</td>
-                                    <td class="px-3 py-2 text-slate-600">{{ calculateTotalZiyadah(p) }} Halaman</td>
-                                    <td class="px-3 py-2 text-slate-600">{{ calculateTaskPercentage(p) }}%</td>
-                                    <td class="px-3 py-2">
-                                        <div class="flex space-x-1">
-                                            <button @click="showEditModal(p)" class="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-blue-100">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                  <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                                                  <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-                                                </svg>
-                                            </button>
-                                            <button @click="deleteParticipant(p.id)" class="text-red-600 hover:text-red-800 p-1 rounded-md hover:bg-red-100">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                                </svg>
-                                            </button>
-                                        </div>
+                                <tr v-for="p in participants" :key="p.id" class="border-t">
+                                    <td class="px-4 py-3">{{ p.name }}</td>
+                                    <td class="px-4 py-3">{{ calculateTaskPercentage(p) }}%</td>
+                                    <td class="px-4 py-3">{{ calculateTotalZiyadah(p) }} hal</td>
+                                    
+                                    <td class="px-4 py-3">{{ p.tasmikJuz.length }} juz</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin View -->
+            <div v-if="activeView === 'admin'">
+                <div v-if="!isAuthenticated" class="text-center py-12">
+                    <p class="text-slate-600 mb-4">Silakan login untuk mengakses panel admin</p>
+                    <button @click="showLoginModal = true" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Login Admin
+                    </button>
+                </div>
+
+                <div v-else>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Panel Admin</h2>
+                        <div class="flex gap-2">
+                            <button @click="syncData" v-if="supabaseConnected" 
+                                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                                Sync Data
+                            </button>
+                            <button @click="showAddModal" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                + Tambah Peserta
+                            </button>
+                            <button @click="logout" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">Nama</th>
+                                    <th class="px-4 py-3 text-left">Total Hafalan</th>
+                                    <th class="px-4 py-3 text-left">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-if="participants.length === 0">
+                                    <td colspan="3" class="px-4 py-8 text-center text-slate-500">Belum ada peserta</td>
+                                </tr>
+                                <tr v-for="p in participants" :key="p.id" class="border-t">
+                                    <td class="px-4 py-3">{{ p.name }}</td>
+                                    <td class="px-4 py-3">{{ calculateTotalZiyadah(p) }} halaman</td>
+                                    <td class="px-4 py-3">
+                                        <button @click="showEditModal(p)" class="text-blue-600 hover:underline mr-3">
+                                            Edit
+                                        </button>
+                                        <button @click="deleteParticipant(p.id)" class="text-red-600 hover:underline">
+                                            Hapus
+                                        </button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -394,40 +278,21 @@ Jika tidak terjawab dengan baik, maka peserta hanya diperbolehkan setoran maksim
                     </div>
                 </div>
             </div>
-            
-            <!-- Fallback states -->
-            <div v-if="activeView === 'dashboard' && !currentParticipant && participants.length > 0" class="text-center py-8">
-                <h3 class="text-lg font-semibold text-slate-700">Pilih Peserta</h3>
-                <p class="text-slate-500 mt-1">Silakan pilih peserta dari daftar di atas untuk memulai input data.</p>
-            </div>
-            <div v-if="activeView === 'dashboard' && participants.length === 0" class="text-center py-8">
-                <h3 class="text-lg font-semibold text-slate-700">Selamat Datang!</h3>
-                <p class="text-slate-500 mt-1">Belum ada data peserta. Silakan ke <a href="#" @click.prevent="showAdminLogin" class="text-blue-600 font-semibold hover:underline">Panel Admin</a> untuk menambahkan peserta baru.</p>
-            </div>
-
-            <!-- Access Denied for Overview -->
-            <div v-if="activeView === 'overview' && !isAuthenticated" class="text-center py-8">
-                <h3 class="text-lg font-semibold text-slate-700">Akses Terbatas</h3>
-                <p class="text-slate-500 mt-1">Silakan login sebagai admin untuk melihat laporan peserta.</p>
-                <button @click="showAdminLogin" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm">
-                    Login Admin
-                </button>
-            </div>
-
         </main>
 
-        <!-- Admin Login Modal -->
-        <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-50 z-30 flex items-center justify-center p-4">
-            <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6">
-                <h3 class="font-bold text-lg mb-4">Login Admin</h3>
+        <!-- Login Modal -->
+        <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 max-w-sm w-full">
+                <h3 class="text-lg font-bold mb-4">Login Admin</h3>
                 <form @submit.prevent="adminLogin">
-                    <label for="adminPassword" class="block text-sm font-medium text-slate-600 mb-2">Password Admin</label>
-                    <input id="adminPassword" v-model="adminPassword" type="password" placeholder="Masukkan password" class="w-full border border-slate-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4" required>
-                    <div class="flex justify-end space-x-2">
-                        <button type="button" @click="closeLoginModal" class="bg-slate-200 text-slate-700 font-medium py-2 px-3 rounded-md hover:bg-slate-300 text-sm">
+                    <input v-model="adminPassword" type="password" placeholder="Password" 
+                           class="w-full border rounded p-2 mb-4" required>
+                    <div class="flex gap-2">
+                        <button type="button" @click="showLoginModal = false" 
+                                class="flex-1 bg-slate-200 text-slate-700 py-2 rounded hover:bg-slate-300">
                             Batal
                         </button>
-                        <button type="submit" class="bg-blue-600 text-white font-medium py-2 px-3 rounded-md hover:bg-blue-700 text-sm">
+                        <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
                             Login
                         </button>
                     </div>
@@ -435,690 +300,300 @@ Jika tidak terjawab dengan baik, maka peserta hanya diperbolehkan setoran maksim
             </div>
         </div>
 
-        <!-- Admin Modal for Add/Edit Participant -->
-        <div v-if="showAdminModal" class="fixed inset-0 bg-black bg-opacity-50 z-30 flex items-center justify-center p-4">
-            <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
-                <h3 class="font-bold text-lg mb-4">{{ adminForm.id ? 'Edit' : 'Tambah' }} Peserta</h3>
+        <!-- Add/Edit Modal -->
+        <div v-if="showAdminModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 max-w-sm w-full">
+                <h3 class="text-lg font-bold mb-4">{{ adminForm.id ? 'Edit' : 'Tambah' }} Peserta</h3>
                 <form @submit.prevent="saveParticipant">
-                    <label for="participantName" class="block text-sm font-medium text-slate-600 mb-2">Nama Peserta</label>
-                    <input id="participantName" v-model="adminForm.name" type="text" placeholder="Masukkan nama lengkap" class="w-full border border-slate-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    <div class="mt-6 flex justify-end space-x-2">
-                        <button type="button" @click="closeAdminModal" class="bg-slate-200 text-slate-700 font-medium py-2 px-3 rounded-md hover:bg-slate-300 text-sm">
+                    <input v-model="adminForm.name" type="text" placeholder="Nama Peserta" 
+                           class="w-full border rounded p-2 mb-4" required>
+                    <div class="flex gap-2">
+                        <button type="button" @click="closeAdminModal" 
+                                class="flex-1 bg-slate-200 text-slate-700 py-2 rounded hover:bg-slate-300">
                             Batal
                         </button>
-                        <button type="submit" class="bg-blue-600 text-white font-medium py-2 px-3 rounded-md hover:bg-blue-700 text-sm">
+                        <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
                             Simpan
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-
     </div>
+</div>
 
-    <script>
-        const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
-        
-        // Supabase Configuration - REPLACE WITH YOUR ACTUAL VALUES
-        const SUPABASE_URL = 'https://ajpzgfbouohodcqtxhoo.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqcHpnZmJvdW9ob2RjcXR4aG9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMTgzMzMsImV4cCI6MjA2OTg5NDMzM30.Om-i-MsYYB_rjMrnNsMvt3do8bHGBIRf2z7l6NLt8Vk';
-        
-        let supabase = null;
+<script>
+const { createApp } = Vue;
 
-        createApp({
-            setup() {
-                // --- STATE ---
-                const isReady = ref(false);
-                const isLoading = ref(false);
-                const loadingMessage = ref('');
-                const participants = ref([]);
-                const currentParticipantId = ref(''); // Default to empty string
-                const activeView = ref('dashboard');
-                const selectedMonth = ref(new Date().getMonth());
-                const selectedYear = ref(new Date().getFullYear());
-                const isOnline = ref(navigator.onLine);
-                const supabaseConnected = ref(false);
-                const connectionError = ref('');
-
-                // Authentication
-                const isAuthenticated = ref(false);
-                const showLoginModal = ref(false);
-                const adminPassword = ref('');
-                const ADMIN_PASSWORD = 'admin123';
-
-                // Form models
-                const newZiyadahFrom = ref(null);
-                const newZiyadahTo = ref(null);
-                const newTasmikJuz = ref(null);
+createApp({
+    data() {
+        return {
+            isReady: false,
+            initError: null,
+            participants: [],
+            currentParticipantId: '',
+            activeView: 'dashboard',
+            selectedMonth: new Date().getMonth(),
+            selectedYear: new Date().getFullYear(),
+            supabaseConnected: false,
+            isAuthenticated: false,
+            showLoginModal: false,
+            adminPassword: '',
+            newZiyadahFrom: null,
+            newZiyadahTo: null,
+            newTasmikJuz: null,
+            showAdminModal: false,
+            adminForm: { id: null, name: '' },
+            supabase: null
+        };
+    },
+    computed: {
+        currentParticipant() {
+            if (!this.currentParticipantId) return null;
+            return this.participants.find(p => p.id === this.currentParticipantId);
+        },
+        ziyadahTotal() {
+            if (!this.currentParticipant) return 0;
+            return this.currentParticipant.ziyadah
+                .filter(z => {
+                    const date = new Date(z.date);
+                    return date.getMonth() === this.selectedMonth && date.getFullYear() === this.selectedYear;
+                })
+                .reduce((sum, z) => sum + (z.to - z.from + 1), 0);
+        },
+        dailyTaskPercentage() {
+            if (!this.currentParticipant) return 0;
+            return this.calculateTaskPercentage(this.currentParticipant);
+        },
+        sortedTasmikJuz() {
+            if (!this.currentParticipant) return [];
+            return [...this.currentParticipant.tasmikJuz].sort((a, b) => a - b);
+        },
+        daysInSelectedMonth() {
+            return new Date(this.selectedYear, this.selectedMonth + 1, 0).getDate();
+        },
+        selectedMonthName() {
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            return months[this.selectedMonth];
+        }
+    },
+    methods: {
+        async retryInit() {
+            this.initError = null;
+            this.isReady = false;
+            await this.initApp();
+        },
+        async initApp() {
+            try {
+                console.log('Initializing app...');
                 
-                // Admin modal state
-                const showAdminModal = ref(false);
-                const adminForm = reactive({
-                    id: null,
-                    name: ''
-                });
-
-                // Info toggle state
-                const showInfo = ref(false); // Changed to false by default
-
-                // --- COMPUTED ---
-                const currentParticipant = computed(() => {
-                    if (!currentParticipantId.value || participants.value.length === 0) {
-                        return null;
-                    }
-                    return participants.value.find(p => p.id === currentParticipantId.value);
-                });
-
-                const availableMonths = computed(() => {
-                    const months = [];
-                    const monthNames = [
-                        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-                    ];
+                // Init Supabase
+                try {
+                    const SUPABASE_URL = 'https://ajpzgfbouohodcqtxhoo.supabase.co';
+                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqcHpnZmJvdW9ob2RjcXR4aG9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMTgzMzMsImV4cCI6MjA2OTg5NDMzM30.Om-i-MsYYB_rjMrnNsMvt3do8bHGBIRf2z7l6NLt8Vk';
                     
-                    for (let i = 0; i < 12; i++) {
-                        months.push({
-                            value: i,
-                            label: `${monthNames[i]} ${selectedYear.value}`
-                        });
+                    this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    const { error } = await this.supabase.from('participants').select('count', { count: 'exact', head: true });
+                    
+                    if (!error) {
+                        this.supabaseConnected = true;
+                        console.log('Supabase connected');
                     }
-                    return months;
-                });
+                } catch (e) {
+                    console.warn('Supabase not available:', e.message);
+                }
 
-                const selectedMonthName = computed(() => {
-                    const monthNames = [
-                        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-                    ];
-                    return monthNames[selectedMonth.value];
-                });
-
-                const daysInSelectedMonth = computed(() => {
-                    return new Date(selectedYear.value, selectedMonth.value + 1, 0).getDate();
-                });
-
-                const ziyadahTotal = computed(() => {
-                    if (!currentParticipant.value) return 0;
-                    return currentParticipant.value.ziyadah
-                        .filter(z => {
-                            const date = new Date(z.date);
-                            return date.getMonth() === selectedMonth.value && date.getFullYear() === selectedYear.value;
-                        })
-                        .reduce((total, item) => total + (item.to - item.from + 1), 0);
-                });
+                // Load data
+                await this.loadData();
                 
-                const dailyTaskPercentage = computed(() => {
-                    if (!currentParticipant.value) return 0;
-                    return calculateTaskPercentage(currentParticipant.value);
-                });
-
-                const sortedTasmikJuz = computed(() => {
-                    if (!currentParticipant.value) return [];
-                    return [...currentParticipant.value.tasmikJuz].sort((a, b) => a - b);
-                });
-
-                // Overview computed values
-                const totalHalamanSemua = computed(() => {
-                    return participants.value.reduce((total, p) => total + calculateTotalZiyadah(p), 0);
-                });
-
-                const totalTasmikSemua = computed(() => {
-                    return participants.value.reduce((total, p) => total + p.tasmikJuz.length, 0);
-                });
-
-                const rataRataTilawah = computed(() => {
-                    if (participants.value.length === 0) return 0;
-                    const total = participants.value.reduce((sum, p) => sum + calculateTaskPercentage(p), 0);
-                    return total / participants.value.length;
-                });
-
-                // Sorted participants for ranking
-                const sortedParticipants = computed(() => {
-                    return [...participants.value].sort((a, b) => {
-                        // Primary sort: Tilawah percentage (higher is better)
-                        const tilawahA = calculateTaskPercentage(a);
-                        const tilawahB = calculateTaskPercentage(b);
-                        if (tilawahB !== tilawahA) return tilawahB - tilawahA;
-                        
-                        // Secondary sort: Total hafalan (higher is better)
-                        const halamanA = calculateTotalZiyadah(a);
-                        const halamanB = calculateTotalZiyadah(b);
-                        if (halamanB !== halamanA) return halamanB - halamanA;
-                        
-                        // Tertiary sort: Juz tasmik count (higher is better)
-                        const tasmikA = a.tasmikJuz.length;
-                        const tasmikB = b.tasmikJuz.length;
-                        return tasmikB - tasmikA;
-                    });
-                });
-
-                // --- SUPABASE METHODS ---
-                const initSupabase = async () => {
-                    connectionError.value = '';
-                    
-                    // Check if URL and Key are configured
-                    if (!SUPABASE_URL || SUPABASE_URL === 'https://your-project.supabase.co' || 
-                        !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'your-anon-key') {
-                        connectionError.value = 'Supabase URL dan Key belum dikonfigurasi';
-                        console.log('Supabase not configured, using localStorage only');
-                        return false;
-                    }
-
-                    try {
-                        // Initialize Supabase client
-                        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                        
-                        // Test connection with timeout
-                        const timeoutPromise = new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('Connection timeout')), 10000)
-                        );
-
-                        const testPromise = supabase.from('participants').select('count', { count: 'exact', head: true });
-                        
-                        const { data, error } = await Promise.race([testPromise, timeoutPromise]);
-                        
-                        if (error) {
-                            // Check if table doesn't exist (expected for new setup)
-                            if (error.code === 'PGRST116' || error.message?.includes('relation "participants" does not exist')) {
-                                connectionError.value = 'Tabel "participants" belum dibuat. Jalankan SQL schema terlebih dahulu.';
-                                console.warn('Participants table does not exist. Please run the SQL schema.');
-                                return false;
-                            }
-                            throw error;
-                        }
-                        
-                        supabaseConnected.value = true;
-                        console.log('Supabase connected successfully');
-                        return true;
-                        
-                    } catch (error) {
-                        connectionError.value = `Koneksi gagal: ${error.message}`;
-                        console.error('Supabase connection failed:', error);
-                        supabaseConnected.value = false;
-                        return false;
-                    }
-                };
-
-                const loadFromSupabase = async () => {
-                    if (!supabase || !supabaseConnected.value) return false;
-                    
-                    try {
-                        isLoading.value = true;
-                        loadingMessage.value = 'Memuat data dari server...';
-                        
-                        const { data, error } = await supabase
-                            .from('participants')
-                            .select('*')
-                            .order('created_at', { ascending: true });
-                        
-                        if (error) throw error;
-                        
-                        if (data && data.length > 0) {
-                            participants.value = data.map(p => ({
-                                id: p.id,
-                                name: p.name,
-                                ziyadah: p.ziyadah || [],
-                                dailyTasks: p.daily_tasks || {},
-                                tasmikJuz: p.tasmik_juz || []
-                            }));
-                            console.log(`Loaded ${data.length} participants from Supabase`);
-                            return true;
-                        }
-                        return false;
-                    } catch (error) {
-                        console.error('Error loading from Supabase:', error);
-                        connectionError.value = `Gagal memuat data: ${error.message}`;
-                        return false;
-                    } finally {
-                        isLoading.value = false;
-                    }
-                };
-
-                const saveToSupabase = async (participant) => {
-                    if (!supabase || !supabaseConnected.value || !isOnline.value) return false;
-                    
-                    try {
-                        const supabaseData = {
-                            id: participant.id,
-                            name: participant.name,
-                            ziyadah: participant.ziyadah,
-                            daily_tasks: participant.dailyTasks,
-                            tasmik_juz: participant.tasmikJuz,
-                            updated_at: new Date().toISOString()
-                        };
-
-                        const { error } = await supabase
-                            .from('participants')
-                            .upsert(supabaseData, { onConflict: 'id' });
-                        
-                        if (error) throw error;
-                        console.log(`Saved participant ${participant.name} to Supabase`);
-                        return true;
-                    } catch (error) {
-                        console.error('Error saving to Supabase:', error);
-                        connectionError.value = `Gagal menyimpan: ${error.message}`;
-                        return false;
-                    }
-                };
-
-                const deleteFromSupabase = async (id) => {
-                    if (!supabase || !supabaseConnected.value || !isOnline.value) return false;
-                    
-                    try {
-                        const { error } = await supabase
-                            .from('participants')
-                            .delete()
-                            .eq('id', id);
-                        
-                        if (error) throw error;
-                        console.log(`Deleted participant ${id} from Supabase`);
-                        return true;
-                    } catch (error) {
-                        console.error('Error deleting from Supabase:', error);
-                        connectionError.value = `Gagal menghapus: ${error.message}`;
-                        return false;
-                    }
-                };
-
-                const syncData = async () => {
-                    if (!supabase || !supabaseConnected.value) {
-                        alert('Tidak terhubung ke server');
-                        return;
-                    }
-                    
-                    try {
-                        isLoading.value = true;
-                        loadingMessage.value = 'Sinkronisasi data...';
-                        
-                        let successCount = 0;
-                        let errorCount = 0;
-                        
-                        // Save all participants to Supabase
-                        for (const participant of participants.value) {
-                            const success = await saveToSupabase(participant);
-                            if (success) {
-                                successCount++;
-                            } else {
-                                errorCount++;
-                            }
-                        }
-                        
-                        if (errorCount === 0) {
-                            alert(`Semua data berhasil disinkronisasi (${successCount} peserta)`);
-                        } else {
-                            alert(`Sinkronisasi selesai: ${successCount} berhasil, ${errorCount} gagal`);
-                        }
-                        
-                    } catch (error) {
-                        console.error('Sync error:', error);
-                        alert('Gagal sinkronisasi data');
-                    } finally {
-                        isLoading.value = false;
-                    }
-                };
-
-                // --- METHODS ---
-
-                // Authentication Methods
-                const showAdminLogin = () => {
-                    if (isAuthenticated.value) {
-                        activeView.value = 'admin';
-                    } else {
-                        showLoginModal.value = true;
-                    }
-                };
-
-                const adminLogin = () => {
-                    if (adminPassword.value === ADMIN_PASSWORD) {
-                        isAuthenticated.value = true;
-                        activeView.value = 'admin';
-                        showLoginModal.value = false;
-                        adminPassword.value = '';
-                    } else {
-                        alert('Password salah!');
-                    }
-                };
-
-                const logout = () => {
-                    isAuthenticated.value = false;
-                    activeView.value = 'dashboard';
-                };
-
-                const closeLoginModal = () => {
-                    showLoginModal.value = false;
-                    adminPassword.value = '';
-                };
-
-                // Data Persistence
-                const saveData = async () => {
-                    try {
-                        localStorage.setItem('tahfidz_data', JSON.stringify(participants.value));
-                        localStorage.setItem('tahfidz_last_user', currentParticipantId.value);
-                        localStorage.setItem('tahfidz_selected_month', selectedMonth.value);
-                        localStorage.setItem('tahfidz_selected_year', selectedYear.value);
-                        
-                        // Auto-sync to Supabase when online
-                        if (isOnline.value && supabaseConnected.value && currentParticipant.value) {
-                            // Debounced sync - only sync the modified participant
-                            await saveToSupabase(currentParticipant.value);
-                        }
-                    } catch (e) {
-                        console.error("Gagal menyimpan data:", e);
-                    }
-                };
-
-                const loadData = async () => {
-                    try {
-                        // Try to load from Supabase first
-                        const supabaseLoaded = await loadFromSupabase();
-                        
-                        // Fallback to localStorage if Supabase fails
-                        if (!supabaseLoaded) {
-                            const data = localStorage.getItem('tahfidz_data');
-                            if (data) {
-                                participants.value = JSON.parse(data);
-                                console.log(`Loaded ${participants.value.length} participants from localStorage`);
-                            }
-                        }
-
-                        // Load preferences - Keep selection empty by default
-                        const lastUser = localStorage.getItem('tahfidz_last_user');
-                        const lastMonth = localStorage.getItem('tahfidz_selected_month');
-                        const lastYear = localStorage.getItem('tahfidz_selected_year');
-                        
-                        // Only restore if user had a valid selection and participant still exists
-                        if (lastUser && lastUser !== '' && participants.value.some(p => p.id == lastUser)) {
-                            currentParticipantId.value = parseInt(lastUser);
-                        } else {
-                            currentParticipantId.value = ''; // Keep empty by default
-                        }
-
-                        if (lastMonth !== null) {
-                            selectedMonth.value = parseInt(lastMonth);
-                        }
-                        if (lastYear !== null) {
-                            selectedYear.value = parseInt(lastYear);
-                        }
-
-                    } catch (e) {
-                        console.error("Gagal memuat data:", e);
-                        participants.value = [];
-                    } finally {
-                        isReady.value = true;
-                    }
-                };
-
-                // Dashboard Methods
-                const addZiyadah = async () => {
-                    if (!currentParticipant.value || !newZiyadahFrom.value || !newZiyadahTo.value) return;
-                    if (newZiyadahTo.value < newZiyadahFrom.value) {
-                        alert("Halaman 'sampai' tidak boleh lebih kecil dari 'dari'.");
-                        return;
-                    }
-                    currentParticipant.value.ziyadah.push({
-                        from: newZiyadahFrom.value,
-                        to: newZiyadahTo.value,
-                        date: new Date(selectedYear.value, selectedMonth.value, new Date().getDate()).toISOString()
-                    });
-                    newZiyadahFrom.value = null;
-                    newZiyadahTo.value = null;
-                    await saveData();
-                };
-
-                const addTasmik = async () => {
-                    if (!currentParticipant.value || !newTasmikJuz.value) return;
-                    if (currentParticipant.value.tasmikJuz.includes(newTasmikJuz.value)) {
-                        alert(`Juz ${newTasmikJuz.value} sudah ada dalam daftar.`);
-                        return;
-                    }
-                    currentParticipant.value.tasmikJuz.push(newTasmikJuz.value);
-                    newTasmikJuz.value = null;
-                    await saveData();
-                };
-
-                const toggleDailyTask = async (day) => {
-                    if (!currentParticipant.value) return;
-                    const taskKey = `${selectedYear.value}-${selectedMonth.value}-${day}`;
-                    if (!currentParticipant.value.dailyTasks) {
-                        currentParticipant.value.dailyTasks = {};
-                    }
-                    currentParticipant.value.dailyTasks[taskKey] = !currentParticipant.value.dailyTasks[taskKey];
-                    await saveData();
-                };
-
-                const getTaskStatus = (day) => {
-                    if (!currentParticipant.value) return false;
-                    const taskKey = `${selectedYear.value}-${selectedMonth.value}-${day}`;
-                    return currentParticipant.value.dailyTasks && currentParticipant.value.dailyTasks[taskKey];
-                };
-
-                const getDayName = (day) => {
-                    const date = new Date(selectedYear.value, selectedMonth.value, day);
-                    return date.toLocaleString('id-ID', { weekday: 'short' });
-                };
-
-                // Admin Panel Methods
-                const showAddModal = () => {
-                    adminForm.id = null;
-                    adminForm.name = '';
-                    showAdminModal.value = true;
-                };
-                
-                const showEditModal = (participant) => {
-                    adminForm.id = participant.id;
-                    adminForm.name = participant.name;
-                    showAdminModal.value = true;
-                };
-
-                const closeAdminModal = () => {
-                    showAdminModal.value = false;
-                };
-
-                const saveParticipant = async () => {
-                    if (!adminForm.name.trim()) {
-                        alert("Nama peserta tidak boleh kosong.");
-                        return;
-                    }
-                    
-                    try {
-                        if (adminForm.id) { // Edit
-                            const p = participants.value.find(p => p.id === adminForm.id);
-                            if (p) {
-                                p.name = adminForm.name;
-                                await saveToSupabase(p);
-                            }
-                        } else { // Add
-                            const newParticipant = {
-                                id: Date.now(),
-                                name: adminForm.name,
-                                ziyadah: [],
-                                dailyTasks: {},
-                                tasmikJuz: []
-                            };
-                            participants.value.push(newParticipant);
-                            // Don't auto-select new participant
-                            activeView.value = 'dashboard';
-                            await saveToSupabase(newParticipant);
-                        }
-                        
-                        await saveData();
-                        closeAdminModal();
-                    } catch (error) {
-                        console.error('Error saving participant:', error);
-                        alert('Gagal menyimpan data peserta');
-                    }
-                };
-
-                const deleteParticipant = async (id) => {
-                    if (confirm("Apakah Anda yakin ingin menghapus peserta ini?")) {
-                        try {
-                            await deleteFromSupabase(id);
-                            participants.value = participants.value.filter(p => p.id !== id);
-                            if (currentParticipantId.value === id) {
-                                currentParticipantId.value = ''; // Reset to empty
-                            }
-                            await saveData();
-                        } catch (error) {
-                            console.error('Error deleting participant:', error);
-                            alert('Gagal menghapus data peserta');
-                        }
-                    }
-                };
-                
-                // Helper functions
-                const calculateTotalZiyadah = (p) => {
-                    return p.ziyadah.reduce((total, item) => total + (item.to - item.from + 1), 0);
-                };
-
-                const calculateTaskPercentage = (p) => {
-                    const totalDaysInMonth = daysInSelectedMonth.value;
-                    if (totalDaysInMonth === 0) return 0;
-                    
-                    let completedDays = 0;
-                    for (let day = 1; day <= totalDaysInMonth; day++) {
-                        const taskKey = `${selectedYear.value}-${selectedMonth.value}-${day}`;
-                        if (p.dailyTasks && p.dailyTasks[taskKey]) {
-                            completedDays++;
-                        }
-                    }
-                    return Math.round((completedDays / totalDaysInMonth) * 100);
-                };
-
-                // Overview helper methods
-                const getProgressColor = (percentage) => {
-                    if (percentage >= 80) return 'bg-green-500';
-                    if (percentage >= 60) return 'bg-yellow-500';
-                    if (percentage >= 40) return 'bg-orange-500';
-                    return 'bg-red-500';
-                };
-
-                const getStatusBadge = (percentage) => {
-                    if (percentage >= 80) return 'bg-green-100 text-green-800';
-                    if (percentage >= 60) return 'bg-yellow-100 text-yellow-800';
-                    if (percentage >= 40) return 'bg-orange-100 text-orange-800';
-                    return 'bg-red-100 text-red-800';
-                };
-
-                const getStatusText = (percentage) => {
-                    if (percentage >= 80) return '';
-                    if (percentage >= 60) return '';
-                    if (percentage >= 40) return ' ';
-                    return '';
-                };
-
-                const getRankBadge = (index) => {
-                    if (index === 0) return 'bg-yellow-400 text-yellow-900'; // Gold
-                    if (index === 1) return 'bg-gray-300 text-gray-800'; // Silver
-                    if (index === 2) return 'bg-orange-400 text-orange-900'; // Bronze
-                    return 'bg-blue-100 text-blue-800'; // Others
-                };
-
-                // Auto-update month when entering new month
-                const checkAndUpdateMonth = () => {
-                    const now = new Date();
-                    const currentMonth = now.getMonth();
-                    const currentYear = now.getFullYear();
-                    
-                    if (selectedMonth.value !== currentMonth || selectedYear.value !== currentYear) {
-                        selectedMonth.value = currentMonth;
-                        selectedYear.value = currentYear;
-                    }
-                };
-
-                // Network status handling
-                const handleOnline = () => {
-                    isOnline.value = true;
-                };
-
-                const handleOffline = () => {
-                    isOnline.value = false;
-                };
-
-                // --- LIFECYCLE & WATCHERS ---
-                onMounted(async () => {
-                    // Setup network listeners
-                    window.addEventListener('online', handleOnline);
-                    window.addEventListener('offline', handleOffline);
-                    
-                    // Initialize Supabase
-                    await initSupabase();
-                    
-                    // Load data
-                    await loadData();
-                    
-                    checkAndUpdateMonth();
-                    // Check for month change every minute
-                    setInterval(checkAndUpdateMonth, 60000);
-                });
-
-                // Auto-save on data changes
-                watch(participants, saveData, { deep: true });
-                watch(currentParticipantId, saveData);
-                watch(selectedMonth, saveData);
-                watch(selectedYear, saveData);
-
-                return {
-                    // State
-                    isReady,
-                    isLoading,
-                    loadingMessage,
-                    participants,
-                    currentParticipantId,
-                    activeView,
-                    selectedMonth,
-                    selectedYear,
-                    isOnline,
-                    supabaseConnected,
-                    connectionError,
-                    isAuthenticated,
-                    showLoginModal,
-                    adminPassword,
-                    newZiyadahFrom,
-                    newZiyadahTo,
-                    newTasmikJuz,
-                    showAdminModal,
-                    adminForm,
-                    showInfo,
-                    
- // Computed
-                    currentParticipant,
-                    availableMonths,
-                    selectedMonthName,
-                    daysInSelectedMonth,
-                    ziyadahTotal,
-                    dailyTaskPercentage,
-                    sortedTasmikJuz,
-                    totalHalamanSemua,
-                    totalTasmikSemua,
-                    rataRataTilawah,
-                    sortedParticipants,
-                    // Methods
-                    showAdminLogin,
-                    adminLogin,
-                    logout,
-                    closeLoginModal,
-                    addZiyadah,
-                    addTasmik,
-                    toggleDailyTask,
-                    getTaskStatus,
-                    getDayName,
-                    showAddModal,
-                    showEditModal,
-                    closeAdminModal,
-                    saveParticipant,
-                    deleteParticipant,
-                    calculateTotalZiyadah,
-                    calculateTaskPercentage,
-                    getProgressColor,
-                    getStatusBadge,
-                    getStatusText,
-                    getRankBadge,
-                    syncData,
-                };
+                this.isReady = true;
+                console.log('App initialized successfully');
+            } catch (error) {
+                console.error('Init error:', error);
+                this.initError = error.message;
             }
-        }).mount('#app');
-    </script>
+        },
+        async loadData() {
+            try {
+                // Try Supabase first
+                if (this.supabaseConnected) {
+                    const { data } = await this.supabase.from('participants').select('*');
+                    if (data && data.length > 0) {
+                        this.participants = data.map(p => ({
+                            id: p.id,
+                            name: p.name,
+                            ziyadah: p.ziyadah || [],
+                            dailyTasks: p.daily_tasks || {},
+                            tasmikJuz: p.tasmik_juz || []
+                        }));
+                        console.log('Loaded from Supabase:', this.participants.length);
+                        return;
+                    }
+                }
 
+                // Fallback to localStorage
+                const stored = localStorage.getItem('tahfidz_data');
+                if (stored) {
+                    this.participants = JSON.parse(stored);
+                    console.log('Loaded from localStorage:', this.participants.length);
+                }
+            } catch (e) {
+                console.error('Load error:', e);
+            }
+        },
+        saveData() {
+            try {
+                localStorage.setItem('tahfidz_data', JSON.stringify(this.participants));
+            } catch (e) {
+                console.error('Save error:', e);
+            }
+        },
+        async syncData() {
+            if (!this.supabaseConnected) return alert('Database tidak terhubung');
+            
+            try {
+                for (const p of this.participants) {
+                    await this.supabase.from('participants').upsert({
+                        id: p.id,
+                        name: p.name,
+                        ziyadah: p.ziyadah,
+                        daily_tasks: p.dailyTasks,
+                        tasmik_juz: p.tasmikJuz
+                    });
+                }
+                alert('Sinkronisasi berhasil!');
+            } catch (e) {
+                alert('Gagal sinkronisasi: ' + e.message);
+            }
+        },
+        handleAdminClick() {
+            if (this.isAuthenticated) {
+                this.activeView = 'admin';
+            } else {
+                this.showLoginModal = true;
+            }
+        },
+        adminLogin() {
+            if (this.adminPassword === 'admin123') {
+                this.isAuthenticated = true;
+                this.activeView = 'admin';
+                this.showLoginModal = false;
+                this.adminPassword = '';
+            } else {
+                alert('Password salah!');
+            }
+        },
+        logout() {
+            this.isAuthenticated = false;
+            this.activeView = 'dashboard';
+        },
+        addZiyadah() {
+            if (!this.currentParticipant) return;
+            if (this.newZiyadahTo < this.newZiyadahFrom) {
+                return alert('Halaman "sampai" harus lebih besar dari "dari"');
+            }
+            
+            this.currentParticipant.ziyadah.push({
+                from: this.newZiyadahFrom,
+                to: this.newZiyadahTo,
+                date: new Date().toISOString()
+            });
+            
+            this.newZiyadahFrom = null;
+            this.newZiyadahTo = null;
+            this.saveData();
+        },
+        addTasmik() {
+            if (!this.currentParticipant) return;
+            if (this.currentParticipant.tasmikJuz.includes(this.newTasmikJuz)) {
+                return alert(`Juz ${this.newTasmikJuz} sudah ada`);
+            }
+            
+            this.currentParticipant.tasmikJuz.push(this.newTasmikJuz);
+            this.newTasmikJuz = null;
+            this.saveData();
+        },
+        showAddModal() {
+            this.adminForm = { id: null, name: '' };
+            this.showAdminModal = true;
+        },
+        showEditModal(p) {
+            this.adminForm = { id: p.id, name: p.name };
+            this.showAdminModal = true;
+        },
+        closeAdminModal() {
+            this.showAdminModal = false;
+        },
+        async saveParticipant() {
+            if (!this.adminForm.name.trim()) return alert('Nama tidak boleh kosong');
+            
+            if (this.adminForm.id) {
+                // Edit
+                const p = this.participants.find(p => p.id === this.adminForm.id);
+                if (p) p.name = this.adminForm.name;
+            } else {
+                // Add
+                this.participants.push({
+                    id: Date.now(),
+                    name: this.adminForm.name,
+                    ziyadah: [],
+                    dailyTasks: {},
+                    tasmikJuz: []
+                });
+            }
+            
+            this.saveData();
+            this.closeAdminModal();
+        },
+        deleteParticipant(id) {
+            if (!confirm('Yakin hapus peserta ini?')) return;
+            
+            this.participants = this.participants.filter(p => p.id !== id);
+            if (this.currentParticipantId === id) {
+                this.currentParticipantId = '';
+            }
+            this.saveData();
+        },
+        calculateTotalZiyadah(p) {
+            return p.ziyadah.reduce((sum, z) => sum + (z.to - z.from + 1), 0);
+        },
+        calculateTaskPercentage(p) {
+            const days = new Date(this.selectedYear, this.selectedMonth + 1, 0).getDate();
+            let completed = 0;
+            for (let d = 1; d <= days; d++) {
+                const key = `${this.selectedYear}-${this.selectedMonth}-${d}`;
+                if (p.dailyTasks && p.dailyTasks[key]) completed++;
+            }
+            return Math.round((completed / days) * 100);
+        },
+        toggleDailyTask(day) {
+            if (!this.currentParticipant) return;
+            const key = `${this.selectedYear}-${this.selectedMonth}-${day}`;
+            
+            if (!this.currentParticipant.dailyTasks) {
+                this.currentParticipant.dailyTasks = {};
+            }
+            
+            this.currentParticipant.dailyTasks[key] = !this.currentParticipant.dailyTasks[key];
+            this.saveData();
+        },
+        getTaskStatus(day) {
+            if (!this.currentParticipant) return false;
+            const key = `${this.selectedYear}-${this.selectedMonth}-${day}`;
+            return this.currentParticipant.dailyTasks && this.currentParticipant.dailyTasks[key];
+        },
+        getDayName(day) {
+            const date = new Date(this.selectedYear, this.selectedMonth, day);
+            const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            return days[date.getDay()];
+        }
+    },
+    mounted() {
+        this.initApp();
+    }
+}).mount('#app');
+</script>
 
 </body>
 </html>
