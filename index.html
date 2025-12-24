@@ -67,10 +67,11 @@
                 <div class="flex flex-col sm:flex-row gap-3 mb-4">
                     <div class="flex-1">
                          <label class="block text-sm font-medium text-slate-600 mb-1">Pilih Peserta:</label>
-                         <select v-model="currentParticipantId" class="w-full bg-white border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                             <option value="">-- Pilih Peserta --</option>
-                             <option v-for="p in participants" :key="p.id" :value="p.id">{{ p.name }}</option>
-                         </select>
+
+<select v-model="currentParticipantId" class="w-full bg-white border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <option value="">-- Pilih Peserta --</option>
+    <option v-for="p in sortedParticipants" :key="p.id" :value="p.id">{{ p.name }}</option>
+</select>
                     </div>
                 </div>
 
@@ -149,19 +150,26 @@
                                 
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr v-for="p in participants" :key="p.id" class="border-b last:border-0 hover:bg-slate-50">
-                                <td class="px-4 py-3 font-medium">{{ p.name }}</td>
-                                                                <td class="px-4 py-3">
-                                    <span :class="calculateTaskPercentage(p) > 70 ? 'text-green-600' : 'text-orange-600'" class="font-bold">
-                                        {{ calculateTaskPercentage(p) }}%
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">{{ calculateTotalZiyadah(p) }} Hal</td>
-                                <td class="px-4 py-3">{{ p.tasmikJuz.length }} Juz</td>
-
-                            </tr>
-                        </tbody>
+<tbody>
+    <tr v-for="(p, index) in sortedParticipantsByProgress" :key="p.id" class="border-b last:border-0 hover:bg-slate-50">
+        <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+                <span v-if="index === 0" class="text-lg">1</span>
+                <span v-else-if="index === 1" class="text-lg">2</span>
+                <span v-else-if="index === 2" class="text-lg">3</span>
+                <span v-else class="text-slate-400 text-sm font-medium">{{ index + 1 }}</span>
+                <span class="font-medium">{{ p.name }}</span>
+            </div>
+        </td>
+        <td class="px-4 py-3">
+            <span :class="calculateTaskPercentage(p) > 70 ? 'text-green-600' : 'text-orange-600'" class="font-bold">
+                {{ calculateTaskPercentage(p) }}%
+            </span>
+        </td>
+        <td class="px-4 py-3">{{ calculateTotalZiyadah(p) }} Hal</td>
+        <td class="px-4 py-3">{{ p.tasmikJuz.length }} Juz</td>
+    </tr>
+</tbody>
                     </table>
                 </div>
             </div>
@@ -267,6 +275,37 @@
                     if (!currentParticipant.value) return 0;
                     return calculateTaskPercentage(currentParticipant.value);
                 });
+
+                // Tambahkan di bagian COMPUTED (sekitar baris 285-295)
+// Letakkan setelah computed dailyTaskPercentage
+
+const sortedParticipants = computed(() => {
+    return [...participants.value].sort((a, b) => 
+        a.name.localeCompare(b.name, 'id')
+    );
+});
+
+const sortedParticipantsByProgress = computed(() => {
+    return [...participants.value].sort((a, b) => {
+        const percentA = calculateTaskPercentage(a);
+        const percentB = calculateTaskPercentage(b);
+        
+        // Urutkan dari tertinggi ke terendah
+        if (percentB !== percentA) {
+            return percentB - percentA;
+        }
+        
+        // Jika persentase sama, urutkan berdasarkan total hafalan
+        const hafalanA = calculateTotalZiyadah(a);
+        const hafalanB = calculateTotalZiyadah(b);
+        if (hafalanB !== hafalanA) {
+            return hafalanB - hafalanA;
+        }
+        
+        // Jika masih sama, urutkan berdasarkan jumlah juz tasmik
+        return b.tasmikJuz.length - a.tasmikJuz.length;
+    });
+});
 
                 // --- LOGIKA DATABASE ---
                 const initSupabase = async () => {
@@ -455,6 +494,7 @@
                     isAuthenticated, adminPassword, showAdminModal, adminForm,
                     newZiyadahFrom, newZiyadahTo, newTasmikJuz,
                     daysInSelectedMonth, dailyTaskPercentage,
+                    sortedParticipants, sortedParticipantsByProgress,
                     calculateTotalZiyadah, calculateTaskPercentage,
                     adminLogin, logout, showAddModal, saveParticipant, deleteParticipant,
                     addZiyadah, addTasmik, toggleDailyTask, getTaskStatus, syncData, showAdminLogin: () => activeView.value = 'admin'
