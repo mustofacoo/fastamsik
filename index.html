@@ -48,7 +48,7 @@
         <div class="max-w-3xl mx-auto px-4 pt-3 pb-2">
             <div class="flex items-center justify-between mb-2">
                 <h1 class="text-base font-bold">Tahfizh Itqon Fastamsik</h1>
-                <span :class="supabaseConnected ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" class="text-[11px] font-semibold px-2 py-0.5 rounded-full">{{ supabaseConnected ? 'Online' : 'Lokal' }}</span>
+                <span :class="supabaseConnected ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" class="text-[11px] font-semibold px-2 py-0.5 rounded-full">{{ supabaseConnected ? 'Bismillah' : 'Sedang tidak connect internet' }}</span>
             </div>
             <nav class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg">
                 <button v-for="t in [['dashboard','Dashboard'],['overview','Laporan'],['admin','Admin']]" :key="t[0]"
